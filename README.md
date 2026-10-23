@@ -149,4 +149,4 @@ docs/REUSE.md            参考仓库的复用映射
 
 ## License
 
-MIT。
+MIT，见 [LICENSE](LICENSE)。
