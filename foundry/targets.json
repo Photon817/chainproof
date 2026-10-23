@@ -1,0 +1,35 @@
+{
+  "Vault.sol": {
+    "contract": "Vault",
+    "description": "Classic checks-effects-interactions violation: withdraw() sends ETH before zeroing balances.",
+    "expected": "proven",
+    "seed": {
+      "function": "deposit()",
+      "eth": "3",
+      "account": "victim"
+    },
+    "attacker_fund_eth": "1"
+  },
+  "Treasury.sol": {
+    "contract": "Treasury",
+    "description": "setOperator() has no authorization check; the operator can sweep the whole treasury.",
+    "expected": "proven",
+    "seed": {
+      "function": "",
+      "eth": "5",
+      "account": "deployer"
+    },
+    "attacker_fund_eth": "1"
+  },
+  "GuardedVault.sol": {
+    "contract": "GuardedVault",
+    "description": "Same CEI bug as Vault but protected by nonReentrant; used to show the Reviewer rejecting a false positive.",
+    "expected": "rejected",
+    "seed": {
+      "function": "deposit()",
+      "eth": "3",
+      "account": "victim"
+    },
+    "attacker_fund_eth": "1"
+  }
+}

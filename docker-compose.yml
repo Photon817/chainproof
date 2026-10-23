@@ -1,0 +1,55 @@
+# ChainProof local stack: Anvil is the chain, app is the PHP workbench.
+# Public Anvil keys only. Never point ANVIL_RPC_URL at a real network.
+services:
+  anvil:
+    image: ghcr.io/foundry-rs/foundry:stable
+    command:
+      - anvil
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8545"
+      - --chain-id
+      - "31337"
+      - --accounts
+      - "10"
+      - --balance
+      - "10000"
+      - --silent
+    ports:
+      - "8545:8545"
+    healthcheck:
+      test: ["CMD", "cast", "block-number", "--rpc-url", "http://127.0.0.1:8545"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+
+  app:
+    build:
+      context: .
+      args:
+        PHP_IMAGE: ${PHP_IMAGE:-php:8.3-cli}
+        COMPOSER_IMAGE: ${COMPOSER_IMAGE:-composer:2}
+        FOUNDRY_IMAGE: ${FOUNDRY_IMAGE:-ghcr.io/foundry-rs/foundry:stable}
+    depends_on:
+      anvil:
+        condition: service_healthy
+    environment:
+      APP_ENV: dev
+      APP_DEBUG: "0"
+      ANVIL_RPC_URL: http://anvil:8545
+      ANVIL_CHAIN_ID: "31337"
+      APP_LLM_MODE: ${APP_LLM_MODE:-mock}
+      APP_LLM_BASE_URL: ${APP_LLM_BASE_URL:-https://api.deepseek.com/v1}
+      APP_LLM_API_KEY: ${APP_LLM_API_KEY:-}
+      APP_LLM_MODEL: ${APP_LLM_MODEL:-deepseek-chat}
+      APP_LLM_JSON_MODE: ${APP_LLM_JSON_MODE:-1}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./var/runs:/app/var/runs
+    command:
+      - sh
+      - -c
+      - mkdir -p var/runs var/cache var/log && php -S 0.0.0.0:8000 -t public public/index.php

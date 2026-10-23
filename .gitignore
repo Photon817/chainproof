@@ -1,0 +1,16 @@
+/vendor/
+/var/runs/
+/var/cache/
+/var/log/
+/.env.local
+/.env.*.local
+/phpunit.xml
+/.phpunit.cache/
+/foundry/out/
+/foundry/cache/
+/foundry/broadcast/
+/foundry/script/generated/
+/foundry/lib/
+/_reference/
+/.tools/
+.DS_Store

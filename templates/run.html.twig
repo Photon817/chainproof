@@ -1,0 +1,302 @@
+{% extends 'base.html.twig' %}
+
+{% macro status_label(status) %}
+    {%- if status == 'proven' -%}链上已验证
+    {%- elseif status == 'accepted' -%}审查通过
+    {%- elseif status == 'needs_manual_poc' -%}需人工 PoC
+    {%- elseif status == 'poc_failed' -%}PoC 未通过
+    {%- elseif status == 'rejected' -%}审查驳回
+    {%- elseif status == 'candidate' -%}候选
+    {%- elseif status == 'running' -%}运行中
+    {%- elseif status == 'queued' -%}排队中
+    {%- elseif status == 'completed' -%}已完成
+    {%- elseif status == 'failed' -%}失败
+    {%- else -%}{{ status }}
+    {%- endif -%}
+{% endmacro %}
+
+{% block title %}Run {{ run.id }} · ChainProof{% endblock %}
+
+{% block body %}
+{% import _self as ui %}
+<div class="run-page" data-run-id="{{ run.id }}" data-status="{{ run.status }}">
+    <a class="back-link" href="{{ path('dashboard') }}">← 返回控制台</a>
+
+    <section class="run-head">
+        <div class="run-title">
+            <div class="kicker">RUN · {{ run.id }}</div>
+            <h1>{{ run.target }}</h1>
+            <p class="muted">
+                {{ run.mode }} mode · 创建于 {{ run.created_at }}
+                {% if run.started_at %} · 启动 {{ run.started_at }}{% endif %}
+                {% if run.finished_at %} · 完成 {{ run.finished_at }}{% endif %}
+            </p>
+        </div>
+        <div class="run-stat-grid">
+            <div class="run-stat">
+                <span id="stat-findings">{{ stats.findings }}</span>
+                <small>findings</small>
+            </div>
+            <div class="run-stat">
+                <span id="stat-proven">{{ stats.proven }}</span>
+                <small>proven</small>
+            </div>
+            <div class="run-stat">
+                <span id="stat-extracted">{{ stats.extracted_eth }}</span>
+                <small>ETH extracted</small>
+            </div>
+            <div class="run-stat">
+                <span id="stat-bounty">{{ stats.bounty_eth }}</span>
+                <small>ETH bounty</small>
+            </div>
+            <div class="run-stat run-stat-status">
+                <span id="stat-status" class="badge badge-{{ run.status }}">{{ ui.status_label(run.status) }}</span>
+                <small>status</small>
+            </div>
+        </div>
+    </section>
+
+    {% if run.error %}
+        <div class="flash flash-error">{{ run.error }}</div>
+    {% endif %}
+
+    <div class="run-layout">
+        <div class="run-main">
+            <section class="section">
+                <div class="section-head section-head-row">
+                    <div>
+                        <div class="kicker">FINDINGS</div>
+                        <h2>攻击者声明 vs. 审查者裁决 vs. 链上回执</h2>
+                    </div>
+                    <div class="legend">
+                        <span class="badge badge-proven">proven</span>
+                        <span class="badge badge-rejected">rejected</span>
+                        <span class="badge badge-poc_failed">poc_failed</span>
+                    </div>
+                </div>
+
+                {% if findings is empty %}
+                    <div class="empty">还没有发现。Attacker 正在读取 surface map。</div>
+                {% endif %}
+
+                {% for finding in findings %}
+                    <article class="finding">
+                        <header class="finding-head">
+                            <div class="finding-badges">
+                                <span class="badge badge-{{ finding.status }}">{{ ui.status_label(finding.status) }}</span>
+                                <span class="severity sev-{{ finding.severity }}">{{ finding.severity|upper }}</span>
+                                <span class="chip">{{ finding.type }}</span>
+                            </div>
+                            <h3>{{ finding.title }}</h3>
+                            <p class="finding-loc">
+                                <code>{{ finding.file }}</code> · L{{ finding.line_start }}-L{{ finding.line_end }}
+                                · <code>{{ finding.contract }}.{{ finding.function }}()</code>
+                            </p>
+                        </header>
+
+                        <div class="finding-grid">
+                            <section class="finding-col claim">
+                                <h4><span class="col-dot dot-cyan"></span> Attacker</h4>
+                                <p>{{ finding.description }}</p>
+                                <div class="mini-meta">confidence {{ finding.confidence }}</div>
+                                {% if finding.plan %}
+                                    <div class="plan">
+                                        <div class="plan-head">typed plan · <code>{{ finding.plan.template }}</code></div>
+                                        <ol>
+                                            {% for step in finding.plan.steps %}
+                                                <li>{{ step }}</li>
+                                            {% endfor %}
+                                        </ol>
+                                    </div>
+                                {% else %}
+                                    <p class="muted small">没有可执行的类型化计划。</p>
+                                {% endif %}
+                            </section>
+
+                            <section class="finding-col verdict">
+                                <h4><span class="col-dot dot-violet"></span> Reviewer</h4>
+                                {% if finding.verdict %}
+                                    <div class="decision decision-{{ finding.verdict.decision }}">
+                                        {{ finding.verdict.decision|upper }}
+                                        <span>{{ finding.verdict.confidence }}</span>
+                                    </div>
+                                    {% if finding.verdict.chain_falsified %}
+                                        <div class="chain-falsified">链上证据已推翻该声明</div>
+                                    {% endif %}
+                                    <p>{{ finding.verdict.reasoning }}</p>
+                                    {% if finding.verdict.conditions %}
+                                        <ul class="conditions">
+                                            {% for condition in finding.verdict.conditions %}
+                                                <li>{{ condition }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                {% else %}
+                                    <p class="muted">等待审查…</p>
+                                {% endif %}
+                            </section>
+
+                            <section class="finding-col proof">
+                                <h4><span class="col-dot dot-green"></span> Foundry / Anvil</h4>
+                                {% if finding.proof %}
+                                    {% set proof = finding.proof %}
+                                    <div class="balance-delta">
+                                        <div>
+                                            <small>before</small>
+                                            <strong>{{ proof.target_before_eth ?? '0' }} ETH</strong>
+                                        </div>
+                                        <span class="arrow">→</span>
+                                        <div>
+                                            <small>after</small>
+                                            <strong>{{ proof.target_after_eth ?? '0' }} ETH</strong>
+                                        </div>
+                                        <div class="delta">
+                                            <small>extracted</small>
+                                            <strong>{{ proof.extracted_eth ?? '0' }} ETH</strong>
+                                        </div>
+                                    </div>
+                                    <div class="proof-meta">
+                                        <span>target <code>{{ proof.deployment.address ?? 'n/a' }}</code></span>
+                                        {% if proof.poc_tx_hash %}<span>poc tx <code>{{ proof.poc_tx_hash }}</code></span>{% endif %}
+                                        {% if proof.verdict != 'proven' %}
+                                            <span class="fail-note">{{ proof.failure_kind ?? 'failed' }} · {{ proof.message ?? '' }}</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if proof.transactions %}
+                                        <div class="tx-table">
+                                            <table>
+                                                <thead>
+                                                <tr><th>#</th><th>Type</th><th>Function</th><th>Receipt</th><th>Gas</th><th>Hash</th></tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for tx in proof.transactions %}
+                                                    <tr>
+                                                        <td>{{ loop.index }}</td>
+                                                        <td>{{ tx.type }}</td>
+                                                        <td>{{ tx.function ?: tx.contract }}</td>
+                                                        <td><span class="tx-status tx-{{ tx.status }}">{{ tx.status }}</span></td>
+                                                        <td>{{ tx.gas_used ?? '-' }}</td>
+                                                        <td><code>{{ tx.hash }}</code></td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% endif %}
+                                    <div class="artifact-links">
+                                        {% if finding.proof.script %}
+                                            <a href="{{ path('run_artifact', {id: run.id, path: finding.proof.script}) }}">PoC source</a>
+                                        {% endif %}
+                                        <a href="{{ path('run_artifact', {id: run.id, path: 'proofs/' ~ finding.id ~ '.json'}) }}">proof.json</a>
+                                        {% if proof.log %}
+                                            <a href="{{ path('run_artifact', {id: run.id, path: proof.log}) }}">forge log</a>
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <p class="muted">尚未执行链上 PoC。</p>
+                                    {% if finding.meta.poc_blocked_reason is defined %}
+                                        <p class="fail-note">{{ finding.meta.poc_blocked_reason }}</p>
+                                    {% endif %}
+                                {% endif %}
+                            </section>
+                        </div>
+
+                        <footer class="finding-foot">
+                            <details>
+                                <summary>代码证据</summary>
+                                <pre>{{ finding.vulnerable_code }}</pre>
+                            </details>
+                            <div class="remediation"><strong>修复：</strong>{{ finding.remediation }}</div>
+                        </footer>
+                    </article>
+                {% endfor %}
+            </section>
+
+            <section class="section">
+                <div class="section-head">
+                    <div class="kicker">BOUNTY</div>
+                    <h2>Agent 链上自主结算</h2>
+                    <p>只有 Foundry 证明过的 high/critical 发现，才会被提交到本地 BountyEscrow。</p>
+                </div>
+                {% if bounty %}
+                    <div class="bounty-card">
+                        <div class="bounty-status">
+                            <span class="badge badge-{{ bounty.status }}">{{ bounty.status }}</span>
+                            {% if bounty.reward_eth is defined %}
+                                <strong>{{ bounty.reward_eth }} ETH</strong>
+                            {% endif %}
+                        </div>
+                        <dl class="bounty-dl">
+                            <div><dt>Escrow</dt><dd><code>{{ bounty.escrow ?? 'n/a' }}</code></dd></div>
+                            <div><dt>Report ID</dt><dd><code>{{ bounty.report_id ?? 'n/a' }}</code></dd></div>
+                            <div><dt>Report hash</dt><dd><code>{{ bounty.report_hash ?? 'n/a' }}</code></dd></div>
+                            <div><dt>PoC tx</dt><dd><code>{{ bounty.poc_tx_hash ?? 'n/a' }}</code></dd></div>
+                            {% if bounty.reason is defined %}<div><dt>Reason</dt><dd>{{ bounty.reason }}</dd></div>{% endif %}
+                            {% if bounty.error is defined %}<div><dt>Error</dt><dd class="fail-note">{{ bounty.error }}</dd></div>{% endif %}
+                        </dl>
+                        {% if bounty.transactions %}
+                            <div class="bounty-txs">
+                                {% for name, hash in bounty.transactions %}
+                                    <span><small>{{ name }}</small><code>{{ hash }}</code></span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="empty">本次运行未启用赏金。</div>
+                {% endif %}
+            </section>
+        </div>
+
+        <aside class="run-side">
+            <section class="side-panel">
+                <div class="side-head">
+                    <h3>事件流</h3>
+                    <span class="live-dot {{ run.status == 'running' or run.status == 'queued' ? 'is-live' : '' }}"></span>
+                </div>
+                <div class="terminal" id="event-stream">
+                    {% for event in events %}
+                        <div class="event event-{{ event.level }}" data-seq="{{ event.seq }}">
+                            <span class="event-time">{{ event.at|slice(11, 8) }}</span>
+                            <span class="event-type">{{ event.type }}</span>
+                            <span class="event-msg">{{ event.message }}</span>
+                        </div>
+                    {% else %}
+                        <div class="event event-info"><span class="event-msg">等待第一个事件…</span></div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="side-panel">
+                <div class="side-head"><h3>产物</h3></div>
+                <div class="artifact-list">
+                    <a href="{{ path('run_report', {id: run.id}) }}" target="_blank" rel="noreferrer">report.html</a>
+                    <a href="{{ path('run_artifact', {id: run.id, path: 'report.md'}) }}" target="_blank" rel="noreferrer">report.md</a>
+                    <a href="{{ path('run_artifact', {id: run.id, path: 'report.json'}) }}" target="_blank" rel="noreferrer">report.json</a>
+                    <a href="{{ path('run_artifact', {id: run.id, path: 'surface.json'}) }}" target="_blank" rel="noreferrer">surface.json</a>
+                    <a href="{{ path('run_artifact', {id: run.id, path: 'events.jsonl'}) }}" target="_blank" rel="noreferrer">events.jsonl</a>
+                </div>
+            </section>
+
+            <section class="side-panel">
+                <div class="side-head"><h3>摘要</h3></div>
+                <dl class="side-dl">
+                    <div><dt>Target</dt><dd>{{ run.target_path ?? run.target }}</dd></div>
+                    <div><dt>Mode</dt><dd>{{ run.mode }}</dd></div>
+                    <div><dt>Bounty</dt><dd>{{ run.bounty_enabled ? 'enabled' : 'disabled' }}</dd></div>
+                    <div><dt>Accepted</dt><dd>{{ stats.accepted }}</dd></div>
+                    <div><dt>Rejected</dt><dd>{{ stats.rejected }}</dd></div>
+                    <div><dt>Proven</dt><dd>{{ stats.proven }}</dd></div>
+                </dl>
+            </section>
+
+            {% if cli_log %}
+                <section class="side-panel">
+                    <div class="side-head"><h3>CLI log</h3></div>
+                    <pre class="cli-log">{{ cli_log }}</pre>
+                </section>
+            {% endif %}
+        </aside>
+    </div>
+</div>
+{% endblock %}

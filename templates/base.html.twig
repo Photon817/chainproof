@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}ChainProof · 链上合约 AI 审计工作台{% endblock %}</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="ambient" aria-hidden="true"></div>
+<header class="topbar">
+    <a class="brand" href="{{ path('dashboard') }}">
+        <span class="brand-mark">CP</span>
+        <span class="brand-copy">
+            <strong>ChainProof</strong>
+            <small>adversarial audit workbench</small>
+        </span>
+    </a>
+    <nav class="topnav">
+        <a href="{{ path('dashboard') }}">控制台</a>
+        <a href="{{ path('api_health') }}" target="_blank" rel="noreferrer">Health</a>
+        <a href="https://github.com/vinceAmstoutz/symfony-security-auditor" target="_blank" rel="noreferrer">蓝本</a>
+    </nav>
+    <div class="topbar-tag">PHP orchestrates · Foundry judges</div>
+</header>
+
+<main class="shell">
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="flash flash-{{ label }}">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
+    {% block body %}{% endblock %}
+</main>
+
+<footer class="footer">
+    <span>ChainProof · ETHShenzhen BUIDL</span>
+    <span>Local Anvil only · no mainnet, no third-party assets</span>
+</footer>
+<script src="/app.js" defer></script>
+</body>
+</html>

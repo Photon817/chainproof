@@ -1,0 +1,41 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/Kernel.php'
+            - '../src/Domain/Model/'
+            - '../src/Agent/LlmException.php'
+            - '../src/Execution/ExecutionException.php'
+            - '../src/Execution/ProcessResult.php'
+
+    App\Config\PlatformConfig:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+            $runsDir: '%kernel.project_dir%/var/runs'
+            $targetsDir: '%kernel.project_dir%/foundry/src'
+            $foundryDir: '%kernel.project_dir%/foundry'
+            $promptsDir: '%kernel.project_dir%/prompts'
+            $rpcUrl: '%env(ANVIL_RPC_URL)%'
+            $chainId: '%env(int:ANVIL_CHAIN_ID)%'
+            $llmMode: '%env(APP_LLM_MODE)%'
+            $llmBaseUrl: '%env(APP_LLM_BASE_URL)%'
+            $llmApiKey: '%env(APP_LLM_API_KEY)%'
+            $llmModel: '%env(APP_LLM_MODEL)%'
+            $llmJsonMode: '%env(bool:APP_LLM_JSON_MODE)%'
+            $deployerKey: '%env(ANVIL_DEPLOYER_KEY)%'
+            $victimKey: '%env(ANVIL_VICTIM_KEY)%'
+            $attackerKey: '%env(ANVIL_ATTACKER_KEY)%'
+            $auditorKey: '%env(ANVIL_AUDITOR_KEY)%'
+            $judgeKey: '%env(ANVIL_JUDGE_KEY)%'
+            $deployerAddress: '%env(ANVIL_DEPLOYER_ADDRESS)%'
+            $auditorAddress: '%env(ANVIL_AUDITOR_ADDRESS)%'
+            $judgeAddress: '%env(ANVIL_JUDGE_ADDRESS)%'
+            $bountyFundingEth: '%env(BOUNTY_FUNDING_ETH)%'
+            $bountyMaxRewardEth: '%env(BOUNTY_MAX_REWARD_ETH)%'
+
+    App\Agent\LlmGateway:
+        alias: App\Agent\OpenAiCompatibleGateway

@@ -1,0 +1,270 @@
+{% macro status_label(status) %}
+    {%- if status == 'proven' -%}链上已验证
+    {%- elseif status == 'accepted' -%}审查通过
+    {%- elseif status == 'needs_manual_poc' -%}需人工 PoC
+    {%- elseif status == 'poc_failed' -%}PoC 未通过
+    {%- elseif status == 'rejected' -%}审查驳回
+    {%- else -%}{{ status }}
+    {%- endif -%}
+{% endmacro %}
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ChainProof Report · {{ run.id }}</title>
+    <style>
+        :root {
+            --bg: #07090d;
+            --panel: #0e1219;
+            --panel-2: #131926;
+            --line: #232c3d;
+            --text: #dfe7f3;
+            --muted: #8291a8;
+            --cyan: #4de3d0;
+            --violet: #a78bfa;
+            --green: #64e6a0;
+            --red: #ff758f;
+            --amber: #ffc857;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: radial-gradient(circle at 15% -10%, rgba(77, 227, 208, .12), transparent 45%), var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif;
+            line-height: 1.6;
+            padding: 48px 24px 80px;
+        }
+        .page { max-width: 1080px; margin: 0 auto; }
+        .kicker { color: var(--cyan); letter-spacing: .18em; text-transform: uppercase; font-size: 11px; font-weight: 700; }
+        h1 { font-size: 34px; line-height: 1.2; margin: 10px 0 8px; }
+        h2 { font-size: 22px; margin: 0 0 6px; }
+        h3 { font-size: 17px; margin: 0 0 6px; }
+        h4 { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+        p { margin: 8px 0; }
+        code, pre { font-family: "SFMono-Regular", ui-monospace, Menlo, monospace; }
+        code { color: #b8c7dd; font-size: 12px; word-break: break-all; }
+        pre { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; overflow-x: auto; font-size: 12px; }
+        a { color: var(--cyan); }
+        .head { border-bottom: 1px solid var(--line); padding-bottom: 24px; margin-bottom: 28px; }
+        .head-meta { display: flex; flex-wrap: wrap; gap: 16px; color: var(--muted); font-size: 13px; }
+        .headline { font-size: 18px; color: var(--text); margin-top: 14px; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 22px 0 34px; }
+        .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+        .stat strong { display: block; font-size: 24px; font-family: ui-monospace, monospace; }
+        .stat small { color: var(--muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+        .section { margin-top: 38px; }
+        .section > p { color: var(--muted); }
+        .finding { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 22px; margin-top: 18px; }
+        .finding-head { border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 16px; }
+        .badges { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+        .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .05em; border: 1px solid var(--line); color: var(--muted); }
+        .badge-proven { color: var(--green); border-color: rgba(100, 230, 160, .4); background: rgba(100, 230, 160, .08); }
+        .badge-rejected, .badge-failed { color: var(--red); border-color: rgba(255, 117, 143, .4); background: rgba(255, 117, 143, .08); }
+        .badge-accepted, .badge-completed, .badge-paid { color: var(--cyan); border-color: rgba(77, 227, 208, .4); background: rgba(77, 227, 208, .08); }
+        .badge-poc_failed, .badge-needs_manual_poc, .badge-skipped, .badge-running { color: var(--amber); border-color: rgba(255, 200, 87, .4); background: rgba(255, 200, 87, .08); }
+        .severity { font-size: 11px; font-weight: 800; letter-spacing: .08em; }
+        .sev-critical, .sev-high { color: var(--red); }
+        .sev-medium { color: var(--amber); }
+        .sev-low, .sev-info { color: var(--muted); }
+        .cols { display: grid; grid-template-columns: 1.1fr 1fr 1.2fr; gap: 16px; }
+        .col { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+        .col p { font-size: 13px; }
+        .mini { color: var(--muted); font-size: 11px; }
+        .decision { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .08em; padding: 4px 9px; border-radius: 6px; margin-bottom: 8px; }
+        .decision-accept, .decision-needs_poc { color: var(--green); background: rgba(100, 230, 160, .1); }
+        .decision-reject { color: var(--red); background: rgba(255, 117, 143, .1); }
+        .delta { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; font-family: ui-monospace, monospace; font-size: 14px; margin: 8px 0; }
+        .delta .arrow { color: var(--muted); }
+        .delta .amount { color: var(--green); font-weight: 700; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
+        th { text-align: left; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--line); padding: 6px 4px; }
+        td { border-bottom: 1px solid rgba(35, 44, 61, .6); padding: 6px 4px; vertical-align: top; }
+        .muted { color: var(--muted); }
+        .fail { color: var(--red); font-size: 12px; }
+        .remediation { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 13px; }
+        .bounty { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin-top: 12px; }
+        .bounty dl { display: grid; grid-template-columns: 140px 1fr; gap: 6px 12px; margin: 12px 0 0; font-size: 12px; }
+        .bounty dt { color: var(--muted); }
+        .bounty dd { margin: 0; }
+        .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+        @media (max-width: 860px) {
+            .grid { grid-template-columns: repeat(2, 1fr); }
+            .cols { grid-template-columns: 1fr; }
+        }
+        @media print {
+            body { background: #fff; color: #111; padding: 0; }
+            .finding, .col, .bounty, .stat { background: #fff; border-color: #ddd; }
+            a { color: #111; }
+        }
+    </style>
+</head>
+<body>
+{% import _self as ui %}
+<div class="page">
+    <header class="head">
+        <div class="kicker">ChainProof · On-chain audit report</div>
+        <h1>{{ run.target }}</h1>
+        <div class="head-meta">
+            <span>run <code>{{ run.id }}</code></span>
+            <span>{{ run.mode }} mode</span>
+            <span>{{ run.created_at }}</span>
+            <span>{{ generated_at }}</span>
+        </div>
+        <p class="headline">{{ summary.headline }}</p>
+    </header>
+
+    <div class="grid">
+        <div class="stat"><strong>{{ stats.findings }}</strong><small>findings</small></div>
+        <div class="stat"><strong>{{ stats.proven }}</strong><small>proven on-chain</small></div>
+        <div class="stat"><strong>{{ stats.extracted_eth }}</strong><small>ETH extracted</small></div>
+        <div class="stat"><strong>{{ stats.bounty_eth }}</strong><small>ETH bounty</small></div>
+    </div>
+
+    <section class="section">
+        <div class="kicker">01 · Narrative</div>
+        <h2>结论先行</h2>
+        <p>
+            本次审计在 <code>{{ run.target }}</code> 上运行。Attacker Agent 提出候选，Reviewer Agent 进行对抗式复核，
+            Foundry/Anvil 负责最终裁决。只有广播后的真实交易回执与余额变化，才会被记为 <strong>proven</strong>。
+        </p>
+        {% if summary.best_finding %}
+            <p>最高优先级发现：<strong>{{ summary.best_finding }}</strong>（{{ summary.best_severity|upper }}）。</p>
+        {% endif %}
+    </section>
+
+    <section class="section">
+        <div class="kicker">02 · Findings</div>
+        <h2>攻击者声明 · 审查者裁决 · 链上回执</h2>
+
+        {% if findings is empty %}
+            <p class="muted">本次运行没有产生候选发现。</p>
+        {% endif %}
+
+        {% for finding in findings %}
+            <article class="finding">
+                <header class="finding-head">
+                    <div class="badges">
+                        <span class="badge badge-{{ finding.status }}">{{ ui.status_label(finding.status) }}</span>
+                        <span class="severity sev-{{ finding.severity }}">{{ finding.severity|upper }}</span>
+                        <span class="chip muted">{{ finding.type }}</span>
+                    </div>
+                    <h3>{{ finding.title }}</h3>
+                    <div class="mini">
+                        <code>{{ finding.file }}</code> · L{{ finding.line_start }}-L{{ finding.line_end }} ·
+                        <code>{{ finding.contract }}.{{ finding.function }}()</code> · attacker confidence {{ finding.confidence }}
+                    </div>
+                </header>
+
+                <div class="cols">
+                    <div class="col">
+                        <h4>Attacker claim</h4>
+                        <p>{{ finding.description }}</p>
+                        {% if finding.plan %}
+                            <div class="mini">typed plan · <code>{{ finding.plan.template }}</code></div>
+                            <ol class="mini">
+                                {% for step in finding.plan.steps %}
+                                    <li>{{ step }}</li>
+                                {% endfor %}
+                            </ol>
+                        {% endif %}
+                    </div>
+
+                    <div class="col">
+                        <h4>Reviewer verdict</h4>
+                        {% if finding.verdict %}
+                            <div class="decision decision-{{ finding.verdict.decision }}">
+                                {{ finding.verdict.decision|upper }} · {{ finding.verdict.confidence }}
+                            </div>
+                            {% if finding.verdict.chain_falsified %}
+                                <div class="fail">链上证据已推翻该声明</div>
+                            {% endif %}
+                            <p>{{ finding.verdict.reasoning }}</p>
+                            {% if finding.verdict.conditions %}
+                                <ul class="mini">
+                                    {% for condition in finding.verdict.conditions %}
+                                        <li>{{ condition }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        {% else %}
+                            <p class="muted">等待审查。</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="col">
+                        <h4>On-chain proof</h4>
+                        {% if finding.proof %}
+                            {% set proof = finding.proof %}
+                            <div class="delta">
+                                <span>{{ proof.target_before_eth ?? '0' }} ETH</span>
+                                <span class="arrow">→</span>
+                                <span>{{ proof.target_after_eth ?? '0' }} ETH</span>
+                                <span class="amount">+{{ proof.extracted_eth ?? '0' }} ETH</span>
+                            </div>
+                            <div class="mini">
+                                target <code>{{ proof.deployment.address ?? 'n/a' }}</code><br>
+                                {% if proof.poc_tx_hash %}poc tx <code>{{ proof.poc_tx_hash }}</code><br>{% endif %}
+                                {% if proof.verdict != 'proven' %}
+                                    <span class="fail">{{ proof.failure_kind ?? 'failed' }} · {{ proof.message ?? '' }}</span>
+                                {% endif %}
+                            </div>
+                            {% if proof.transactions %}
+                                <table>
+                                    <thead><tr><th>#</th><th>Type</th><th>Function</th><th>Receipt</th><th>Gas</th></tr></thead>
+                                    <tbody>
+                                    {% for tx in proof.transactions %}
+                                        <tr>
+                                            <td>{{ loop.index }}</td>
+                                            <td>{{ tx.type }}</td>
+                                            <td>{{ tx.function ?: tx.contract }}</td>
+                                            <td>{{ tx.status }}</td>
+                                            <td>{{ tx.gas_used ?? '-' }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% endif %}
+                        {% else %}
+                            <p class="muted">未执行链上 PoC。</p>
+                            {% if finding.meta.poc_blocked_reason is defined %}
+                                <p class="fail">{{ finding.meta.poc_blocked_reason }}</p>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="remediation"><strong>修复建议：</strong>{{ finding.remediation }}</div>
+            </article>
+        {% endfor %}
+    </section>
+
+    <section class="section">
+        <div class="kicker">03 · Settlement</div>
+        <h2>赏金结算</h2>
+        {% if bounty %}
+            <div class="bounty">
+                <span class="badge badge-{{ bounty.status }}">{{ bounty.status }}</span>
+                {% if bounty.reward_eth is defined %}<strong style="margin-left:10px">{{ bounty.reward_eth }} ETH</strong>{% endif %}
+                <dl>
+                    <dt>Escrow</dt><dd><code>{{ bounty.escrow ?? 'n/a' }}</code></dd>
+                    <dt>Report ID</dt><dd><code>{{ bounty.report_id ?? 'n/a' }}</code></dd>
+                    <dt>Report hash</dt><dd><code>{{ bounty.report_hash ?? 'n/a' }}</code></dd>
+                    <dt>PoC tx</dt><dd><code>{{ bounty.poc_tx_hash ?? 'n/a' }}</code></dd>
+                    {% if bounty.reason is defined %}<dt>Reason</dt><dd>{{ bounty.reason }}</dd>{% endif %}
+                    {% if bounty.error is defined %}<dt>Error</dt><dd class="fail">{{ bounty.error }}</dd>{% endif %}
+                </dl>
+            </div>
+        {% else %}
+            <p class="muted">本次运行未启用赏金结算。</p>
+        {% endif %}
+    </section>
+
+    <footer class="footer">
+        <span>ChainProof · PHP orchestrates, Foundry judges</span>
+        <span>所有交易仅发生在本地 Anvil · 不接触主网或第三方资产</span>
+    </footer>
+</div>
+</body>
+</html>

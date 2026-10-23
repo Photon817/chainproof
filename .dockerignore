@@ -1,0 +1,13 @@
+_reference
+.tools
+vendor
+var/runs
+var/cache
+foundry/out
+foundry/cache
+foundry/broadcast
+foundry/script/generated
+foundry/lib
+.git
+.env.local
+.DS_Store
