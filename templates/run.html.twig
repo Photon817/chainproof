@@ -98,7 +98,7 @@
                             <section class="finding-col claim">
                                 <h4><span class="col-dot dot-cyan"></span> Attacker</h4>
                                 <p>{{ finding.description }}</p>
-                                <div class="mini-meta">confidence {{ finding.confidence }}</div>
+                                <div class="mini-meta">信心 {{ finding.confidence }}</div>
                                 {% if finding.plan %}
                                     <div class="plan">
                                         <div class="plan-head">类型化计划 · <code>{{ finding.plan.template }}</code></div>
@@ -156,17 +156,17 @@
                                         </div>
                                     </div>
                                     <div class="proof-meta">
-                                        <span>target <code>{{ proof.deployment.address ?? 'n/a' }}</code></span>
-                                        {% if proof.poc_tx_hash %}<span>poc tx <code>{{ proof.poc_tx_hash }}</code></span>{% endif %}
+                                        <span>目标 <code>{{ proof.deployment.address ?? '无' }}</code></span>
+                                        {% if proof.poc_tx_hash %}<span>PoC 交易 <code>{{ proof.poc_tx_hash }}</code></span>{% endif %}
                                         {% if proof.verdict != 'proven' %}
-                                            <span class="fail-note">{{ proof.failure_kind ?? 'failed' }} · {{ proof.message ?? '' }}</span>
+                                            <span class="fail-note">{{ proof.failure_kind ?? '失败' }} · {{ proof.message ?? '' }}</span>
                                         {% endif %}
                                     </div>
                                     {% if proof.transactions %}
                                         <div class="tx-table">
                                             <table>
                                                 <thead>
-                                                <tr><th>#</th><th>Type</th><th>Function</th><th>Receipt</th><th>Gas</th><th>Hash</th></tr>
+                                                <tr><th>#</th><th>类型</th><th>函数</th><th>回执</th><th>Gas</th><th>哈希</th></tr>
                                                 </thead>
                                                 <tbody>
                                                 {% for tx in proof.transactions %}
@@ -185,11 +185,11 @@
                                     {% endif %}
                                     <div class="artifact-links">
                                         {% if finding.proof.script %}
-                                            <a href="{{ path('run_artifact', {id: run.id, path: finding.proof.script}) }}">PoC source</a>
+                                            <a href="{{ path('run_artifact', {id: run.id, path: finding.proof.script}) }}">PoC 源码</a>
                                         {% endif %}
                                         <a href="{{ path('run_artifact', {id: run.id, path: 'proofs/' ~ finding.id ~ '.json'}) }}">proof.json</a>
                                         {% if proof.log %}
-                                            <a href="{{ path('run_artifact', {id: run.id, path: proof.log}) }}">forge log</a>
+                                            <a href="{{ path('run_artifact', {id: run.id, path: proof.log}) }}">forge 日志</a>
                                         {% endif %}
                                     </div>
                                 {% else %}
@@ -216,7 +216,7 @@
                 <div class="section-head">
                     <div class="kicker">赏金</div>
                     <h2>Agent 链上自主结算</h2>
-                    <p>只有 Foundry 证明过的 high/critical 发现，才会被提交到本地 BountyEscrow。</p>
+                    <p>只有 Foundry 证明过的高危/严重发现，才会被提交到本地 BountyEscrow。</p>
                 </div>
                 {% if bounty %}
                     <div class="bounty-card">
@@ -227,10 +227,10 @@
                             {% endif %}
                         </div>
                         <dl class="bounty-dl">
-                            <div><dt>托管合约</dt><dd><code>{{ bounty.escrow ?? 'n/a' }}</code></dd></div>
-                            <div><dt>报告 ID</dt><dd><code>{{ bounty.report_id ?? 'n/a' }}</code></dd></div>
-                            <div><dt>报告哈希</dt><dd><code>{{ bounty.report_hash ?? 'n/a' }}</code></dd></div>
-                            <div><dt>PoC 交易</dt><dd><code>{{ bounty.poc_tx_hash ?? 'n/a' }}</code></dd></div>
+                            <div><dt>托管合约</dt><dd><code>{{ bounty.escrow ?? '无' }}</code></dd></div>
+                            <div><dt>报告 ID</dt><dd><code>{{ bounty.report_id ?? '无' }}</code></dd></div>
+                            <div><dt>报告哈希</dt><dd><code>{{ bounty.report_hash ?? '无' }}</code></dd></div>
+                            <div><dt>PoC 交易</dt><dd><code>{{ bounty.poc_tx_hash ?? '无' }}</code></dd></div>
                             {% if bounty.reason is defined %}<div><dt>原因</dt><dd>{{ bounty.reason }}</dd></div>{% endif %}
                             {% if bounty.error is defined %}<div><dt>错误</dt><dd class="fail-note">{{ bounty.error }}</dd></div>{% endif %}
                         </dl>
@@ -281,18 +281,18 @@
             <section class="side-panel">
                 <div class="side-head"><h3>摘要</h3></div>
                 <dl class="side-dl">
-                    <div><dt>Target</dt><dd>{{ run.target_path ?? run.target }}</dd></div>
-                    <div><dt>Mode</dt><dd>{{ run.mode }}</dd></div>
-                    <div><dt>Bounty</dt><dd>{{ run.bounty_enabled ? 'enabled' : 'disabled' }}</dd></div>
-                    <div><dt>Accepted</dt><dd>{{ stats.accepted }}</dd></div>
-                    <div><dt>Rejected</dt><dd>{{ stats.rejected }}</dd></div>
-                    <div><dt>Proven</dt><dd>{{ stats.proven }}</dd></div>
+                    <div><dt>目标</dt><dd>{{ run.target_path ?? run.target }}</dd></div>
+                    <div><dt>模式</dt><dd>{{ run.mode }}</dd></div>
+                    <div><dt>赏金</dt><dd>{{ run.bounty_enabled ? '启用' : '停用' }}</dd></div>
+                    <div><dt>通过</dt><dd>{{ stats.accepted }}</dd></div>
+                    <div><dt>驳回</dt><dd>{{ stats.rejected }}</dd></div>
+                    <div><dt>已验证</dt><dd>{{ stats.proven }}</dd></div>
                 </dl>
             </section>
 
             {% if cli_log %}
                 <section class="side-panel">
-                    <div class="side-head"><h3>CLI log</h3></div>
+                    <div class="side-head"><h3>CLI 日志</h3></div>
                     <pre class="cli-log">{{ cli_log }}</pre>
                 </section>
             {% endif %}

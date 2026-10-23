@@ -204,10 +204,10 @@
                                 <span class="amount">+{{ proof.extracted_eth ?? '0' }} ETH</span>
                             </div>
                             <div class="mini">
-                                target <code>{{ proof.deployment.address ?? 'n/a' }}</code><br>
-                                {% if proof.poc_tx_hash %}poc tx <code>{{ proof.poc_tx_hash }}</code><br>{% endif %}
+                                目标 <code>{{ proof.deployment.address ?? '无' }}</code><br>
+                                {% if proof.poc_tx_hash %}PoC 交易 <code>{{ proof.poc_tx_hash }}</code><br>{% endif %}
                                 {% if proof.verdict != 'proven' %}
-                                    <span class="fail">{{ proof.failure_kind ?? 'failed' }} · {{ proof.message ?? '' }}</span>
+                                    <span class="fail">{{ proof.failure_kind ?? '失败' }} · {{ proof.message ?? '' }}</span>
                                 {% endif %}
                             </div>
                             {% if proof.transactions %}
@@ -248,10 +248,10 @@
                 <span class="badge badge-{{ bounty.status }}">{{ bounty.status }}</span>
                 {% if bounty.reward_eth is defined %}<strong style="margin-left:10px">{{ bounty.reward_eth }} ETH</strong>{% endif %}
                 <dl>
-                    <dt>托管合约</dt><dd><code>{{ bounty.escrow ?? 'n/a' }}</code></dd>
-                    <dt>报告 ID</dt><dd><code>{{ bounty.report_id ?? 'n/a' }}</code></dd>
-                    <dt>报告哈希</dt><dd><code>{{ bounty.report_hash ?? 'n/a' }}</code></dd>
-                    <dt>PoC 交易</dt><dd><code>{{ bounty.poc_tx_hash ?? 'n/a' }}</code></dd>
+                    <dt>托管合约</dt><dd><code>{{ bounty.escrow ?? '无' }}</code></dd>
+                    <dt>报告 ID</dt><dd><code>{{ bounty.report_id ?? '无' }}</code></dd>
+                    <dt>报告哈希</dt><dd><code>{{ bounty.report_hash ?? '无' }}</code></dd>
+                    <dt>PoC 交易</dt><dd><code>{{ bounty.poc_tx_hash ?? '无' }}</code></dd>
                     {% if bounty.reason is defined %}<dt>原因</dt><dd>{{ bounty.reason }}</dd>{% endif %}
                     {% if bounty.error is defined %}<dt>错误</dt><dd class="fail">{{ bounty.error }}</dd>{% endif %}
                 </dl>

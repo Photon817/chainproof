@@ -1,7 +1,7 @@
 {
   "Vault.sol": {
     "contract": "Vault",
-    "description": "Classic checks-effects-interactions violation: withdraw() sends ETH before zeroing balances.",
+    "description": "withdraw() 先转账后清零，典型的 CEI 顺序错误。",
     "expected": "proven",
     "seed": {
       "function": "deposit()",
@@ -12,7 +12,7 @@
   },
   "Treasury.sol": {
     "contract": "Treasury",
-    "description": "setOperator() has no authorization check; the operator can sweep the whole treasury.",
+    "description": "setOperator() 不校验权限，拿到 operator 就能提走全部资金。",
     "expected": "proven",
     "seed": {
       "function": "",
@@ -23,7 +23,7 @@
   },
   "GuardedVault.sol": {
     "contract": "GuardedVault",
-    "description": "Same CEI bug as Vault but protected by nonReentrant; used to show the Reviewer rejecting a false positive.",
+    "description": "和 Vault 一样的 CEI 问题，但有 nonReentrant，用来演示 Reviewer 驳回误报。",
     "expected": "rejected",
     "seed": {
       "function": "deposit()",
