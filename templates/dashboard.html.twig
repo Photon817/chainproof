@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}ChainProof · Don't trust the LLM{% endblock %}
+{% block title %}ChainProof · 别信 LLM，上链验证{% endblock %}
 
 {% block body %}
 {% set node = health.node %}
@@ -10,7 +10,7 @@
 <section class="hero">
     <div class="hero-copy">
         <div class="kicker"><span class="pulse"></span> PHP2Shell 范式 · 平移到 Solidity</div>
-        <h1>Don't trust the LLM.<br><span class="gradient">Prove it on-chain.</span></h1>
+        <h1>别信 LLM 的结论。<br><span class="gradient">上链跑一遍。</span></h1>
         <p class="lede">
             一个 Agent 扮演攻击者，寻找重入与访问控制缺陷；另一个 Agent 扮演审查者，负责驳回站不住脚的声明。
             只有 Foundry/Anvil 上真实广播、真实回执、真实余额变化，才会被标记为
@@ -26,7 +26,7 @@
         <div class="orbit-ring ring-2"></div>
         <div class="orbit-core">
             <span class="core-label">FOUNDRY</span>
-            <span class="core-sub">final judge</span>
+            <span class="core-sub">最终裁决</span>
         </div>
         <div class="orbit-chip chip-a">ATTACKER</div>
         <div class="orbit-chip chip-b">REVIEWER</div>
@@ -44,19 +44,19 @@
     <div class="status-item">
         <span class="status-dot {{ node.reachable ? 'dot-green' : 'dot-red' }}"></span>
         <span>Anvil</span>
-        <strong>{{ node.reachable ? 'reachable' : 'offline' }}</strong>
+        <strong>{{ node.reachable ? '可达' : '离线' }}</strong>
         <small>{{ node.reachable ? 'chain ' ~ node.chain_id ~ ' · block ' ~ (node.block_number ?? '-') : 'docker compose up -d anvil' }}</small>
     </div>
     <div class="status-item">
         <span class="status-dot {{ forge ? 'dot-green' : 'dot-red' }}"></span>
         <span>Forge</span>
-        <strong>{{ forge ? 'ready' : 'missing' }}</strong>
+        <strong>{{ forge ? '就绪' : '缺失' }}</strong>
         <small>{{ forge ? forge|slice(0, 46) : 'foundryup / docker compose build' }}</small>
     </div>
     <div class="status-item">
         <span class="status-dot {{ health.has_llm_key ? 'dot-green' : 'dot-amber' }}"></span>
         <span>LLM Key</span>
-        <strong>{{ health.has_llm_key ? 'loaded' : 'not set' }}</strong>
+        <strong>{{ health.has_llm_key ? '已配置' : '未配置' }}</strong>
         <small>{{ health.has_llm_key ? 'live 模式可用' : 'mock 模式仍然完整可用' }}</small>
     </div>
 </div>
@@ -64,7 +64,7 @@
 <section class="panel launch-panel" id="launch">
     <div class="panel-head">
         <div>
-            <div class="kicker">RUN AN AUDIT</div>
+            <div class="kicker">发起审计</div>
             <h2>把一个合约交给对抗循环</h2>
         </div>
         <div class="panel-note">目标限定在 <code>foundry/src</code> · 只连接本地 Anvil</div>
@@ -88,8 +88,8 @@
         <label class="field">
             <span>Agent 模式</span>
             <select name="mode">
-                <option value="mock" {{ default_mode == 'mock' ? 'selected' }}>mock · deterministic</option>
-                <option value="live" {{ default_mode == 'live' ? 'selected' }}>live · OpenAI-compatible</option>
+                <option value="mock" {{ default_mode == 'mock' ? 'selected' }}>mock · 确定性</option>
+                <option value="live" {{ default_mode == 'live' ? 'selected' }}>live · 兼容 OpenAI</option>
             </select>
         </label>
 
@@ -110,7 +110,7 @@
 
 <section class="section" id="how">
     <div class="section-head">
-        <div class="kicker">THE ADVERSARIAL LOOP</div>
+        <div class="kicker">对抗循环</div>
         <h2>四个角色，一条证据链</h2>
         <p>把 symfony-security-auditor 的攻击者-审查者循环平移到 Solidity，把 AIxVuln 的沙箱执行换成 Foundry/Anvil。</p>
     </div>
@@ -144,7 +144,7 @@
 
 <section class="section" id="targets">
     <div class="section-head">
-        <div class="kicker">SANDBOX TARGETS</div>
+        <div class="kicker">靶场</div>
         <h2>可审计的靶场</h2>
         <p>每个目标都带明确预期：哪些应该被证明，哪个应该被 Reviewer 驳回。</p>
     </div>
@@ -158,8 +158,8 @@
                 <h3>{{ target.contract }}</h3>
                 <p>{{ target.description }}</p>
                 <div class="target-meta">
-                    <span>seed {{ target.seed_eth }} ETH</span>
-                    <span>local only</span>
+                    <span>种子 {{ target.seed_eth }} ETH</span>
+                    <span>仅本地</span>
                 </div>
             </article>
         {% else %}
@@ -171,7 +171,7 @@
 <section class="section">
     <div class="section-head section-head-row">
         <div>
-            <div class="kicker">RECENT RUNS</div>
+            <div class="kicker">运行记录</div>
             <h2>最近运行</h2>
         </div>
         <a class="btn btn-quiet" href="{{ path('dashboard') }}">刷新</a>

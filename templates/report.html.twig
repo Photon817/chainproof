@@ -12,7 +12,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ChainProof Report · {{ run.id }}</title>
+    <title>ChainProof 审计报告 · {{ run.id }}</title>
     <style>
         :root {
             --bg: #07090d;
@@ -104,11 +104,11 @@
 {% import _self as ui %}
 <div class="page">
     <header class="head">
-        <div class="kicker">ChainProof · On-chain audit report</div>
+        <div class="kicker">ChainProof · 链上审计报告</div>
         <h1>{{ run.target }}</h1>
         <div class="head-meta">
             <span>run <code>{{ run.id }}</code></span>
-            <span>{{ run.mode }} mode</span>
+            <span>{{ run.mode }} 模式</span>
             <span>{{ run.created_at }}</span>
             <span>{{ generated_at }}</span>
         </div>
@@ -116,14 +116,14 @@
     </header>
 
     <div class="grid">
-        <div class="stat"><strong>{{ stats.findings }}</strong><small>findings</small></div>
-        <div class="stat"><strong>{{ stats.proven }}</strong><small>proven on-chain</small></div>
-        <div class="stat"><strong>{{ stats.extracted_eth }}</strong><small>ETH extracted</small></div>
-        <div class="stat"><strong>{{ stats.bounty_eth }}</strong><small>ETH bounty</small></div>
+        <div class="stat"><strong>{{ stats.findings }}</strong><small>发现</small></div>
+        <div class="stat"><strong>{{ stats.proven }}</strong><small>链上已验证</small></div>
+        <div class="stat"><strong>{{ stats.extracted_eth }}</strong><small>提取 ETH</small></div>
+        <div class="stat"><strong>{{ stats.bounty_eth }}</strong><small>赏金 ETH</small></div>
     </div>
 
     <section class="section">
-        <div class="kicker">01 · Narrative</div>
+        <div class="kicker">01 · 概要</div>
         <h2>结论先行</h2>
         <p>
             本次审计在 <code>{{ run.target }}</code> 上运行。Attacker Agent 提出候选，Reviewer Agent 进行对抗式复核，
@@ -135,7 +135,7 @@
     </section>
 
     <section class="section">
-        <div class="kicker">02 · Findings</div>
+        <div class="kicker">02 · 发现</div>
         <h2>攻击者声明 · 审查者裁决 · 链上回执</h2>
 
         {% if findings is empty %}
@@ -153,16 +153,16 @@
                     <h3>{{ finding.title }}</h3>
                     <div class="mini">
                         <code>{{ finding.file }}</code> · L{{ finding.line_start }}-L{{ finding.line_end }} ·
-                        <code>{{ finding.contract }}.{{ finding.function }}()</code> · attacker confidence {{ finding.confidence }}
+                        <code>{{ finding.contract }}.{{ finding.function }}()</code> · Attacker 信心 {{ finding.confidence }}
                     </div>
                 </header>
 
                 <div class="cols">
                     <div class="col">
-                        <h4>Attacker claim</h4>
+                        <h4>Attacker 声明</h4>
                         <p>{{ finding.description }}</p>
                         {% if finding.plan %}
-                            <div class="mini">typed plan · <code>{{ finding.plan.template }}</code></div>
+                            <div class="mini">类型化计划 · <code>{{ finding.plan.template }}</code></div>
                             <ol class="mini">
                                 {% for step in finding.plan.steps %}
                                     <li>{{ step }}</li>
@@ -172,7 +172,7 @@
                     </div>
 
                     <div class="col">
-                        <h4>Reviewer verdict</h4>
+                        <h4>Reviewer 裁决</h4>
                         {% if finding.verdict %}
                             <div class="decision decision-{{ finding.verdict.decision }}">
                                 {{ finding.verdict.decision|upper }} · {{ finding.verdict.confidence }}
@@ -194,7 +194,7 @@
                     </div>
 
                     <div class="col">
-                        <h4>On-chain proof</h4>
+                        <h4>链上证据</h4>
                         {% if finding.proof %}
                             {% set proof = finding.proof %}
                             <div class="delta">
@@ -212,7 +212,7 @@
                             </div>
                             {% if proof.transactions %}
                                 <table>
-                                    <thead><tr><th>#</th><th>Type</th><th>Function</th><th>Receipt</th><th>Gas</th></tr></thead>
+                                    <thead><tr><th>#</th><th>类型</th><th>函数</th><th>回执</th><th>Gas</th></tr></thead>
                                     <tbody>
                                     {% for tx in proof.transactions %}
                                         <tr>
@@ -241,19 +241,19 @@
     </section>
 
     <section class="section">
-        <div class="kicker">03 · Settlement</div>
+        <div class="kicker">03 · 结算</div>
         <h2>赏金结算</h2>
         {% if bounty %}
             <div class="bounty">
                 <span class="badge badge-{{ bounty.status }}">{{ bounty.status }}</span>
                 {% if bounty.reward_eth is defined %}<strong style="margin-left:10px">{{ bounty.reward_eth }} ETH</strong>{% endif %}
                 <dl>
-                    <dt>Escrow</dt><dd><code>{{ bounty.escrow ?? 'n/a' }}</code></dd>
-                    <dt>Report ID</dt><dd><code>{{ bounty.report_id ?? 'n/a' }}</code></dd>
-                    <dt>Report hash</dt><dd><code>{{ bounty.report_hash ?? 'n/a' }}</code></dd>
-                    <dt>PoC tx</dt><dd><code>{{ bounty.poc_tx_hash ?? 'n/a' }}</code></dd>
-                    {% if bounty.reason is defined %}<dt>Reason</dt><dd>{{ bounty.reason }}</dd>{% endif %}
-                    {% if bounty.error is defined %}<dt>Error</dt><dd class="fail">{{ bounty.error }}</dd>{% endif %}
+                    <dt>托管合约</dt><dd><code>{{ bounty.escrow ?? 'n/a' }}</code></dd>
+                    <dt>报告 ID</dt><dd><code>{{ bounty.report_id ?? 'n/a' }}</code></dd>
+                    <dt>报告哈希</dt><dd><code>{{ bounty.report_hash ?? 'n/a' }}</code></dd>
+                    <dt>PoC 交易</dt><dd><code>{{ bounty.poc_tx_hash ?? 'n/a' }}</code></dd>
+                    {% if bounty.reason is defined %}<dt>原因</dt><dd>{{ bounty.reason }}</dd>{% endif %}
+                    {% if bounty.error is defined %}<dt>错误</dt><dd class="fail">{{ bounty.error }}</dd>{% endif %}
                 </dl>
             </div>
         {% else %}
@@ -262,7 +262,7 @@
     </section>
 
     <footer class="footer">
-        <span>ChainProof · PHP orchestrates, Foundry judges</span>
+        <span>ChainProof · PHP 编排，Foundry 裁决</span>
         <span>所有交易仅发生在本地 Anvil · 不接触主网或第三方资产</span>
     </footer>
 </div>

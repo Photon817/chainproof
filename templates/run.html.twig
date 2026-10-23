@@ -35,23 +35,23 @@
         <div class="run-stat-grid">
             <div class="run-stat">
                 <span id="stat-findings">{{ stats.findings }}</span>
-                <small>findings</small>
+                <small>发现</small>
             </div>
             <div class="run-stat">
                 <span id="stat-proven">{{ stats.proven }}</span>
-                <small>proven</small>
+                <small>已验证</small>
             </div>
             <div class="run-stat">
                 <span id="stat-extracted">{{ stats.extracted_eth }}</span>
-                <small>ETH extracted</small>
+                <small>提取 ETH</small>
             </div>
             <div class="run-stat">
                 <span id="stat-bounty">{{ stats.bounty_eth }}</span>
-                <small>ETH bounty</small>
+                <small>赏金 ETH</small>
             </div>
             <div class="run-stat run-stat-status">
                 <span id="stat-status" class="badge badge-{{ run.status }}">{{ ui.status_label(run.status) }}</span>
-                <small>status</small>
+                <small>状态</small>
             </div>
         </div>
     </section>
@@ -65,7 +65,7 @@
             <section class="section">
                 <div class="section-head section-head-row">
                     <div>
-                        <div class="kicker">FINDINGS</div>
+                        <div class="kicker">审计发现</div>
                         <h2>攻击者声明 vs. 审查者裁决 vs. 链上回执</h2>
                     </div>
                     <div class="legend">
@@ -101,7 +101,7 @@
                                 <div class="mini-meta">confidence {{ finding.confidence }}</div>
                                 {% if finding.plan %}
                                     <div class="plan">
-                                        <div class="plan-head">typed plan · <code>{{ finding.plan.template }}</code></div>
+                                        <div class="plan-head">类型化计划 · <code>{{ finding.plan.template }}</code></div>
                                         <ol>
                                             {% for step in finding.plan.steps %}
                                                 <li>{{ step }}</li>
@@ -142,16 +142,16 @@
                                     {% set proof = finding.proof %}
                                     <div class="balance-delta">
                                         <div>
-                                            <small>before</small>
+                                            <small>前</small>
                                             <strong>{{ proof.target_before_eth ?? '0' }} ETH</strong>
                                         </div>
                                         <span class="arrow">→</span>
                                         <div>
-                                            <small>after</small>
+                                            <small>后</small>
                                             <strong>{{ proof.target_after_eth ?? '0' }} ETH</strong>
                                         </div>
                                         <div class="delta">
-                                            <small>extracted</small>
+                                            <small>提取</small>
                                             <strong>{{ proof.extracted_eth ?? '0' }} ETH</strong>
                                         </div>
                                     </div>
@@ -214,7 +214,7 @@
 
             <section class="section">
                 <div class="section-head">
-                    <div class="kicker">BOUNTY</div>
+                    <div class="kicker">赏金</div>
                     <h2>Agent 链上自主结算</h2>
                     <p>只有 Foundry 证明过的 high/critical 发现，才会被提交到本地 BountyEscrow。</p>
                 </div>
@@ -227,12 +227,12 @@
                             {% endif %}
                         </div>
                         <dl class="bounty-dl">
-                            <div><dt>Escrow</dt><dd><code>{{ bounty.escrow ?? 'n/a' }}</code></dd></div>
-                            <div><dt>Report ID</dt><dd><code>{{ bounty.report_id ?? 'n/a' }}</code></dd></div>
-                            <div><dt>Report hash</dt><dd><code>{{ bounty.report_hash ?? 'n/a' }}</code></dd></div>
-                            <div><dt>PoC tx</dt><dd><code>{{ bounty.poc_tx_hash ?? 'n/a' }}</code></dd></div>
-                            {% if bounty.reason is defined %}<div><dt>Reason</dt><dd>{{ bounty.reason }}</dd></div>{% endif %}
-                            {% if bounty.error is defined %}<div><dt>Error</dt><dd class="fail-note">{{ bounty.error }}</dd></div>{% endif %}
+                            <div><dt>托管合约</dt><dd><code>{{ bounty.escrow ?? 'n/a' }}</code></dd></div>
+                            <div><dt>报告 ID</dt><dd><code>{{ bounty.report_id ?? 'n/a' }}</code></dd></div>
+                            <div><dt>报告哈希</dt><dd><code>{{ bounty.report_hash ?? 'n/a' }}</code></dd></div>
+                            <div><dt>PoC 交易</dt><dd><code>{{ bounty.poc_tx_hash ?? 'n/a' }}</code></dd></div>
+                            {% if bounty.reason is defined %}<div><dt>原因</dt><dd>{{ bounty.reason }}</dd></div>{% endif %}
+                            {% if bounty.error is defined %}<div><dt>错误</dt><dd class="fail-note">{{ bounty.error }}</dd></div>{% endif %}
                         </dl>
                         {% if bounty.transactions %}
                             <div class="bounty-txs">
