@@ -34,15 +34,25 @@ Solidity 源码
 需要 Docker Desktop。首次构建要能访问 Composer 和 `ghcr.io`。
 
 ```bash
-make up          # Anvil + PHP，控制台在 http://localhost:8000
+make up          # 构建镜像并起 Anvil + PHP，控制台在 http://localhost:8000
 make demo        # 审计 Vault.sol：重入、真实回执、赏金
 make demo-all    # 三个靶场各跑一遍
+```
+
+直连 Docker Hub 和 ghcr 经常超时，可以换镜像站。`Dockerfile` 留了三个 ARG，`docker-compose.yml` 的 `anvil` 也读同一个 `FOUNDRY_IMAGE`：
+
+```bash
+export PHP_IMAGE=docker.1panel.live/library/php:8.3-cli
+export COMPOSER_IMAGE=docker.1panel.live/library/composer:2
+export FOUNDRY_IMAGE=ghcr.dockerproxy.net/foundry-rs/foundry:stable
+docker compose build
+docker compose up -d
 ```
 
 不想用 Docker 的话：
 
 ```bash
-composer install
+composer install --prefer-dist   # composer.lock 已提交，装的是锁定的版本
 anvil --chain-id 31337 --accounts 10 --balance 10000
 php -S 127.0.0.1:8000 -t public public/index.php
 
@@ -62,19 +72,24 @@ docker compose up -d --build app
 
 如果 `forge` 下不动 solc，自己准备一个二进制，导出 `FOUNDRY_SOLC=/abs/path/to/solc`。
 
-## 本机实跑结果
+## 实跑结果
 
-环境：PHP 8.3.32、Symfony 7.4.21、Foundry/Anvil 1.8.6、solc 0.8.24，链是本地 31337。
+两套环境都跑过：本机是 PHP 8.3.32 + Symfony 7.4.21 + Foundry/Anvil 1.8.6 + solc 0.8.24；
+容器是 `php:8.3-cli`（PHP 8.3.36）+ Composer 2.10.3 + foundry 镜像（1.5.1）。链都是本地 31337。
 
 | 项目 | 结果 |
 | --- | --- |
-| `forge test -vv` | 6 passed |
+| `composer install`（真实 Composer，按 `composer.lock`） | 38 个运行时包 + 27 个开发包锁定，vendor 24M |
+| `docker compose build` | 通过，镜像 1.1G |
+| `forge test -vv` | 本机 6 passed，容器内 6 passed |
 | `audit:run Vault.sol --mode=mock --bounty -vvv` | 1 proven，提取 3 ETH，赏金 0.5 ETH |
 | `audit:run Treasury.sol --mode=mock --bounty -vvv` | 1 proven，提取 5 ETH，赏金 1 ETH |
 | `audit:run GuardedVault.sol --mode=mock --bounty` | Reviewer 驳回（0.96），赏金 skipped |
 | Web 控制台 | `/`、`/api/health`、`/runs/{id}`、`/report`、`/artifact` 均 200 |
 | Web 表单发起审计 | 302 到 run 页，轮询到 completed，5 ETH / 1 ETH 赏金 |
 | `lint:yaml` / `lint:twig` / `lint:container` | 全过 |
+
+上面三个靶场的结果在 Docker 里逐条复现过，耗时差不多，Anvil 上看到的余额变化也一致。
 
 Vault 的完整事件流大致长这样：
 
@@ -145,7 +160,7 @@ docs/REUSE.md            参考仓库的复用映射
 - `.env` 里的私钥是 Anvil 公开的 deterministic key，不要往里面打真钱。
 - 只做重入和访问控制。模板有形状限制，对不上的发现会停在 `needs_manual_poc`。
 - `live` 模式效果取决于模型；演示用 `mock`，结果可复现。
-- Docker 镜像没在这台机器上构建（网络到 registry 不通），上面的结果是直接用本机 PHP + Foundry 跑出来的。正常网络下 `make up` 即可。
+- 构建镜像要能拉基础镜像，本机直连 Docker Hub 会超时，上面是用 1panel / dockerproxy 镜像站拉下来再 build 的。
 
 ## License
 

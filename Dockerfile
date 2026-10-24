@@ -27,7 +27,8 @@ COPY --from=foundry /usr/local/bin/forge /usr/local/bin/cast /usr/local/bin/anvi
 WORKDIR /app
 
 # Resolve PHP dependencies before copying source so edits do not bust the cache.
-COPY composer.json ./
+# composer.lock is committed, so the image installs the exact pinned versions.
+COPY composer.json composer.lock ./
 RUN composer install --no-dev --prefer-dist --no-progress --no-scripts
 
 COPY bin ./bin
@@ -39,8 +40,10 @@ COPY src ./src
 COPY templates ./templates
 COPY .env ./.env
 
-RUN mkdir -p var/runs var/cache var/log \
-    && php bin/console about --env=dev >/dev/null \
+# The classmap is built here, after src/ lands, so App\* classes are actually in it.
+RUN composer dump-autoload --no-dev --optimize --classmap-authoritative \
+    && mkdir -p var/runs var/cache var/log \
+    && php bin/console about --env=dev \
     && cd foundry && forge build
 
 EXPOSE 8000 8545
