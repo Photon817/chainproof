@@ -60,6 +60,9 @@ php bin/console audit:targets
 php bin/console audit:run Vault.sol --mode=mock --bounty -vvv
 ```
 
+本机 PHP 要带 `iconv`、`mbstring`、`openssl`、`zip`。Twig 渲染走 mbstring，Composer 解包走 zip，
+缺一个就会在渲染页面或者 install 的时候报错——直接用容器最省事。
+
 `mock` 模式不需要 API Key。`live` 模式接任意 OpenAI 兼容端点：
 
 ```bash
